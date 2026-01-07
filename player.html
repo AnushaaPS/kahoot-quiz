@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #0f172a;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px;
+    animation: fade 0.3s ease;
+  }
+
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .question-box {
+    background: #020617;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  .question {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .timer {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #22c55e;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  button.option {
+    padding: 18px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.15s;
+  }
+
+  button.option:hover {
+    transform: scale(1.03);
+  }
+
+  .A { background: #ef4444; }
+  .B { background: #3b82f6; }
+  .C { background: #22c55e; }
+  .D { background: #f59e0b; }
+
+  button.option:disabled {
+    opacity: 0.6;
+    transform: none;
+  }
+
+  .status {
+    text-align: center;
+    margin-top: 14px;
+    min-height: 18px;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="question-box">
+    <div class="question" id="question">Waiting for quiz to start...</div>
+    <div class="timer" id="timer"></div>
+  </div>
+
+  <div class="options">
+    <button class="option A" onclick="answer('A')">A</button>
+    <button class="option B" onclick="answer('B')">B</button>
+    <button class="option C" onclick="answer('C')">C</button>
+    <button class="option D" onclick="answer('D')">D</button>
+  </div>
+
+  <div class="status" id="status"></div>
+</div>
+
+<!-- COMMON CONFIG -->
+<script src="app.js"></script>
+
+<script>
+  const quizId = getSession("quizId");
+  const name = getSession("playerName");
+
+  let currentQ = null;
+  let answered = false;
+
+  function loadQuestion() {
+    api("getQuestion", { quizId })
+      .then(d => {
+        if (d.status && d.status !== "live") {
+          document.getElementById("question").textContent =
+            "Waiting for host to start...";
+          return;
+        }
+
+        if (d.locked) {
+          disableOptions();
+          document.getElementById("timer").textContent = "Time up!";
+          return;
+        }
+
+        if (d.done) {
+          document.getElementById("question").textContent =
+            "Quiz finished 🎉";
+          disableOptions();
+          return;
+        }
+
+        if (currentQ !== d.qNo) {
+          currentQ = d.qNo;
+          answered = false;
+          enableOptions();
+
+          document.getElementById("question").textContent = d.question;
+          document.getElementById("timer").textContent =
+            "Time left: " + d.timeLeft + "s";
+
+          const opts = document.querySelectorAll(".option");
+          opts[0].textContent = "A. " + d.options[0];
+          opts[1].textContent = "B. " + d.options[1];
+          opts[2].textContent = "C. " + d.options[2];
+          opts[3].textContent = "D. " + d.options[3];
+
+          document.getElementById("status").textContent = "";
+        } else {
+          document.getElementById("timer").textContent =
+            "Time left: " + d.timeLeft + "s";
+        }
+      });
+  }
+
+  function answer(opt) {
+    if (answered) return;
+    answered = true;
+    disableOptions();
+
+    api("submitAnswer", {
+      quizId,
+      qNo: currentQ,
+      name,
+      answer: opt
+    })
+    .then(d => {
+      document.getElementById("status").textContent =
+        d.correct ? "Correct ✅ +100" : "Wrong ❌";
+    });
+  }
+
+  function disableOptions() {
+    document.querySelectorAll(".option").forEach(b => b.disabled = true);
+  }
+
+  function enableOptions() {
+    document.querySelectorAll(".option").forEach(b => b.disabled = false);
+  }
+
+  // Poll every 1 second
+  setInterval(loadQuestion, 1000);
+</script>
+
+</body>
+</html>
