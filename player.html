@@ -136,11 +136,9 @@
         }
 
         if (d.done) {
-          document.getElementById("question").textContent =
-            "Quiz finished 🎉";
-          disableOptions();
-          return;
-        }
+  location.href = "leaderboard.html";
+  return;
+}
 
         if (currentQ !== d.qNo) {
           currentQ = d.qNo;
