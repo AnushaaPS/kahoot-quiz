@@ -2,7 +2,7 @@
    COMMON CONFIG – UPDATE ONCE
 ================================ */
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxfJMthC20dXctGFnb4xyZqJ3RXyFv-58k6hLK0Wwj_-liqyiTKDQkVNs3ab4DCAVsKgw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwce3etj-SNlwMWYgQno_nBlJ1dywosv9xUjtBFzrPwPyqXuWpTRGXol_4-lmMlasx9KQ/exec";
 
 /* ===============================
    COMMON API HELPER
@@ -33,3 +33,4 @@ function getSession(key) {
 function clearSession() {
   localStorage.clear();
 }
+
